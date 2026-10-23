@@ -1,0 +1,205 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# One run per branch or PR. Superseded PR runs are cancelled; runs on main
+# always finish so every trunk commit gets a complete status.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+  THEME_DIR: wp-content/themes/custom-theme
+
+jobs:
+  php-quality:
+    name: PHP quality (PHPCS, PHPStan, Rector)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.3"
+          tools: cs2pr
+          coverage: none
+
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      - name: PHPCS
+        run: vendor/bin/phpcs -q --report=checkstyle | cs2pr
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress --error-format=github
+
+      - name: Rector (dry run)
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+
+  js-quality:
+    name: JS quality (ESLint, Stylelint, Jest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            ${{ env.THEME_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm ci --prefix "$THEME_DIR"
+
+      - name: Lint JS
+        run: npm run lint:js --prefix "$THEME_DIR"
+
+      - name: Lint styles
+        run: npm run lint:css --prefix "$THEME_DIR"
+
+      - name: Lint E2E specs
+        run: npm run lint:e2e
+
+      - name: Jest unit tests
+        run: npm run test:unit --prefix "$THEME_DIR" -- --ci
+
+  build:
+    name: Build theme assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.THEME_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --prefix "$THEME_DIR"
+
+      - name: Build
+        run: npm run build --prefix "$THEME_DIR"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: theme-build
+          path: |
+            ${{ env.THEME_DIR }}/assets/dist
+            ${{ env.THEME_DIR }}/build
+          if-no-files-found: error
+          retention-days: 3
+
+  phpunit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.2", "8.3", "8.4"]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, mysqli, xml
+          coverage: none
+
+      - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
+
+      # The theme registers blocks from build/, so integration tests need the built assets.
+      - uses: actions/download-artifact@v8
+        with:
+          name: theme-build
+          path: ${{ env.THEME_DIR }}
+
+      - name: Unit tests
+        run: composer test:unit
+
+      - name: Integration tests
+        run: composer test:integration
+        env:
+          WP_TESTS_DB_HOST: 127.0.0.1:3306
+          WP_TESTS_DB_USER: root
+          WP_TESTS_DB_PASSWORD: root
+          WP_TESTS_DB_NAME: wordpress_test
+
+  e2e:
+    name: E2E (Playwright on wp-env)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: theme-build
+          path: ${{ env.THEME_DIR }}
+
+      # Test against exactly the WordPress version Composer has locked.
+      - name: Pin wp-env core to the locked WordPress version
+        run: |
+          version="$(jq -r '.packages[] | select(.name == "roots/wordpress") | .version' composer.lock)"
+          echo "Using WordPress ${version}"
+          jq -n --arg core "https://wordpress.org/wordpress-${version}.zip" '{core: $core}' > .wp-env.override.json
+
+      - name: Start wp-env
+        run: npm run env:start
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          WP_BASE_URL: http://localhost:8888
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

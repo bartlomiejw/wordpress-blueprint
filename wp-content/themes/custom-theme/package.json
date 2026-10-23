@@ -1,0 +1,30 @@
+{
+    "name": "custom-theme",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Block theme for the WordPress Blueprint.",
+    "license": "MIT",
+    "scripts": {
+        "build": "npm run build:blocks && npm run build:assets",
+        "build:blocks": "wp-scripts build --webpack-src-dir=blocks --output-path=build/blocks --webpack-copy-php",
+        "build:assets": "wp-scripts build js/main=./assets/js/main.js css/main=./assets/css/main.scss --output-path=assets/dist",
+        "start": "wp-scripts start --webpack-src-dir=blocks --output-path=build/blocks --webpack-copy-php",
+        "start:assets": "wp-scripts start js/main=./assets/js/main.js css/main=./assets/css/main.scss --output-path=assets/dist",
+        "lint:js": "wp-scripts lint-js blocks assets/js",
+        "lint:css": "wp-scripts lint-style \"assets/css/**/*.scss\" \"blocks/**/*.scss\"",
+        "test:unit": "wp-scripts test-unit-js",
+        "format": "wp-scripts format blocks assets"
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "^6.4.0",
+        "@testing-library/react": "^15.0.0",
+        "@testing-library/user-event": "^14.5.0",
+        "@wordpress/i18n": "^6.30.0",
+        "@wordpress/jest-preset-default": "^14.2.0",
+        "@wordpress/scripts": "^30.0.0",
+        "typescript": "^5.9.3"
+    },
+    "engines": {
+        "node": ">=22"
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "name": "bartlomiejw/site-core",
+    "description": "Site Core mu-plugin: the site's data layer (post types, taxonomies, meta, integrations).",
+    "type": "wordpress-muplugin",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SiteCore\\": "src/"
+        }
+    }
+}

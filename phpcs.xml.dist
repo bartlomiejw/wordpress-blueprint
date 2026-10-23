@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Blueprint">
+    <description>PHPCS rules: WordPress Coding Standards + 10up / WordPress VIP conventions.</description>
+
+    <file>wp-content/mu-plugins</file>
+    <file>wp-content/themes/custom-theme</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>*/tests/*</exclude-pattern>
+    <exclude-pattern>*/assets/dist/*</exclude-pattern>
+    <exclude-pattern>*/custom-theme/build/*</exclude-pattern>
+
+    <arg name="basepath" value="."/>
+    <arg name="extensions" value="php"/>
+    <arg name="parallel" value="8"/>
+    <arg value="sp"/>
+
+    <!-- WordPress Coding Standards -->
+    <rule ref="WordPress">
+        <!-- Allow short ternary — clean PHP 8 code -->
+        <exclude name="Universal.Operators.DisallowShortTernary"/>
+        <!-- Short array syntax is fine on PHP 8 (10up convention) -->
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+    </rule>
+
+    <!-- Site Core classes are PSR-4 autoloaded: File_Name.php matches the class name -->
+    <rule ref="WordPress.Files.FileName">
+        <exclude-pattern>*/site-core/src/*</exclude-pattern>
+    </rule>
+
+    <!-- Lowest WordPress version the code must support (deprecation sniffs). -->
+    <config name="minimum_supported_wp_version" value="6.6"/>
+
+    <!-- Text domains — set to your project's text domain -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="custom-theme"/>
+                <element value="site-core"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Return/param type hints are enforced by PHPStan and Rector (TYPE_DECLARATION set). -->
+</ruleset>

@@ -1,0 +1,22 @@
+# szepeviktor/phpstan-wordpress (WordPress stubs and rules) is registered
+# automatically by phpstan/extension-installer.
+
+parameters:
+    level: 8
+    phpVersion: 80200
+
+    paths:
+        - wp-content/mu-plugins
+        - wp-content/themes/custom-theme
+        - tests/phpunit
+
+    excludePaths:
+        - wp-content/themes/custom-theme/node_modules (?)
+        - wp-content/themes/custom-theme/assets/dist (?)
+        - wp-content/themes/custom-theme/build (?)
+
+    # Make the WordPress test library (WP_UnitTestCase, factories) known to PHPStan.
+    scanDirectories:
+        - vendor/wp-phpunit/wp-phpunit/includes
+
+    tmpDir: .phpstan

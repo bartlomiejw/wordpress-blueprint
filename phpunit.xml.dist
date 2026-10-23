@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="tests/phpunit/bootstrap-unit.php"
+    cacheResultFile=".phpunit.cache/test-results"
+    colors="true"
+    beStrictAboutOutputDuringTests="true"
+    failOnWarning="true"
+    failOnRisky="true"
+>
+    <testsuites>
+        <testsuite name="unit">
+            <directory>wp-content/mu-plugins/site-core/tests/unit</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>wp-content/mu-plugins/site-core/tests/integration</directory>
+            <directory>wp-content/themes/custom-theme/tests/php/integration</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage>
+        <include>
+            <directory>wp-content/mu-plugins/site-core/src</directory>
+            <directory>wp-content/themes/custom-theme</directory>
+        </include>
+        <exclude>
+            <directory>wp-content/themes/custom-theme/node_modules</directory>
+            <directory>wp-content/themes/custom-theme/tests</directory>
+            <directory>wp-content/themes/custom-theme/assets/dist</directory>
+            <directory>wp-content/themes/custom-theme/build</directory>
+        </exclude>
+    </coverage>
+</phpunit>

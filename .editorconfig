@@ -1,0 +1,23 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# WordPress PHP coding standards use tabs
+[*.php]
+indent_style = tab
+
+# JS/JSON/YAML/Markdown use 2-space indent (standard in WP block editor packages)
+[*.{js,jsx,ts,tsx,json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+[*.{css,scss}]
+indent_style = space
+indent_size = 2
+
+[*.{html}]
+indent_style = tab

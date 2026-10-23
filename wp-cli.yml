@@ -1,0 +1,2 @@
+# WordPress core lives in wp/ (installed by Composer).
+path: wp

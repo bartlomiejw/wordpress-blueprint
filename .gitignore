@@ -1,0 +1,42 @@
+# WordPress core: installed by Composer, never committed
+/wp/
+
+# Dependencies
+/vendor/
+node_modules/
+
+# Built assets: produced by CI and deployed, never committed
+/wp-content/themes/custom-theme/assets/dist/
+/wp-content/themes/custom-theme/build/
+
+# WordPress runtime files
+/wp-content/uploads/
+/wp-content/upgrade/
+/wp-content/cache/
+/wp-content/advanced-cache.php
+/wp-content/object-cache.php
+/wp-content/wp-cache-config.php
+/wp-content/debug.log
+
+# Environment: never commit secrets
+.env
+.env.local
+.wp-env.override.json
+
+# Tool caches and reports
+.phpunit.cache/
+.phpunit.result.cache
+.phpstan/
+.eslintcache
+.stylelintcache
+/playwright-report/
+/test-results/
+/coverage/
+
+# OS and editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

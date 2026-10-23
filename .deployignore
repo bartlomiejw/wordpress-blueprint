@@ -1,0 +1,40 @@
+# rsync exclude list for .github/workflows/deploy.yml.
+# Excluded paths are neither uploaded nor deleted on the server.
+
+# Server-owned state
+/.env
+/wp-content/uploads/
+/wp-content/cache/
+/wp-content/upgrade/
+
+# Repository and tooling
+.git/
+.github/
+.husky/
+.ddev/
+.idea/
+.vscode/
+node_modules/
+/docs/
+/tests/
+/wp-content/mu-plugins/site-core/tests/
+/wp-content/themes/custom-theme/tests/
+/wp-content/themes/custom-theme/assets/css/
+/wp-content/themes/custom-theme/assets/js/
+/wp-content/themes/custom-theme/blocks/
+/.deployignore
+/.editorconfig
+/.env.example
+/.gitignore
+/.wp-env.json
+/.wp-env.override.json
+/*.md
+/*.dist
+/phpstan.neon
+/rector.php
+/playwright.config.js
+/package.json
+/package-lock.json
+/wp-content/themes/custom-theme/package.json
+/wp-content/themes/custom-theme/package-lock.json
+/wp-content/themes/custom-theme/jest.config.js

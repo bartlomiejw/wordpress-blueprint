@@ -1,0 +1,104 @@
+{
+    "name": "bartlomiejw/wordpress-blueprint",
+    "description": "Production-ready WordPress site template: Composer-managed core, block theme, mu-plugin data layer, and a full quality toolchain.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bartłomiej Warias",
+            "homepage": "https://github.com/bartlomiejw"
+        }
+    ],
+    "keywords": [
+        "wordpress",
+        "block-theme",
+        "composer",
+        "template",
+        "phpunit",
+        "phpstan"
+    ],
+    "require": {
+        "php": ">=8.2",
+        "roots/wordpress": "^7.1",
+        "composer/installers": "^2.2",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "require-dev": {
+        "phpcsstandards/phpcsutils": "^1.0",
+        "phpstan/extension-installer": "^1.3",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^9.6",
+        "rector/rector": "^2.0",
+        "squizlabs/php_codesniffer": "^3.9",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "wp-coding-standards/wpcs": "^3.1",
+        "wp-phpunit/wp-phpunit": "^7.1",
+        "yoast/phpunit-polyfills": "^4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SiteCore\\": "wp-content/mu-plugins/site-core/src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "roots/wordpress-core-installer": true,
+            "composer/installers": true,
+            "phpstan/extension-installer": true
+        },
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2.0"
+        }
+    },
+    "extra": {
+        "wordpress-install-dir": "wp",
+        "installer-paths": {
+            "wp-content/mu-plugins/{$name}/": [
+                "type:wordpress-muplugin"
+            ],
+            "wp-content/plugins/{$name}/": [
+                "type:wordpress-plugin"
+            ],
+            "wp-content/themes/{$name}/": [
+                "type:wordpress-theme"
+            ]
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://wpackagist.org",
+            "only": [
+                "wpackagist-plugin/*",
+                "wpackagist-theme/*"
+            ]
+        }
+    ],
+    "scripts": {
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "rector": "rector process --dry-run",
+        "rector:fix": "rector process",
+        "lint": [
+            "@phpcs",
+            "@phpstan",
+            "@rector"
+        ],
+        "test:unit": "phpunit --testsuite=unit",
+        "test:integration": "phpunit --testsuite=integration --bootstrap=tests/phpunit/bootstrap-integration.php",
+        "test": [
+            "@test:unit",
+            "@test:integration"
+        ]
+    },
+    "scripts-descriptions": {
+        "lint": "Run PHPCS, PHPStan and Rector (dry run).",
+        "test:unit": "Run unit tests (no WordPress, no database).",
+        "test:integration": "Run integration tests against a real WordPress install (needs MySQL)."
+    }
+}

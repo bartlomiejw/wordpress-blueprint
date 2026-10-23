@@ -1,0 +1,42 @@
+// =============================================================================
+// Main stylesheet entry point
+// Compiled by @wordpress/scripts → assets/dist/css/main.css
+// =============================================================================
+
+// Abstracts (no output — variables and mixins only)
+@use "abstracts/variables";
+@use "abstracts/mixins";
+
+// Base
+@use "base/reset";
+@use "base/typography";
+
+// Layout
+// @use "layout/header";
+// @use "layout/footer";
+
+// Components
+// @use "components/button";
+// @use "components/card";
+
+// =============================================================================
+// Site-level layout helpers
+// =============================================================================
+
+.site-main {
+	padding: variables.$spacing-8 variables.$site-padding;
+	max-width: variables.$content-width;
+	margin: 0 auto;
+}
+
+.site-header {
+	padding: variables.$spacing-4 variables.$site-padding;
+	border-bottom: 1px solid variables.$color-bg-alt;
+}
+
+.site-footer {
+	padding: variables.$spacing-8 variables.$site-padding;
+	border-top: 1px solid variables.$color-bg-alt;
+	color: variables.$color-secondary;
+	font-size: variables.$font-size-sm;
+}

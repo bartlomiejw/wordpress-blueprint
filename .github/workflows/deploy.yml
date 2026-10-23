@@ -1,0 +1,86 @@
+name: Deploy
+
+# Deployments are explicit: push a version tag (production) or run the
+# workflow by hand (staging or production). Nothing deploys on a plain push.
+#
+# Setup, per GitHub Environment ("staging", "production"):
+#   - repository variable DEPLOY_ENABLED=true (the job is skipped otherwise)
+#   - secrets SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS (output of `ssh-keyscan -H host`,
+#     verified out of band), SSH_HOST, SSH_USER, DEPLOY_PATH
+#   - protection rules (required reviewers, tag/branch restrictions) as needed
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event_name == 'push' && 'production' || inputs.environment }}
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ github.event_name == 'push' && 'production' || inputs.environment }}
+    concurrency:
+      group: deploy-${{ github.event_name == 'push' && 'production' || inputs.environment }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: wp-content/themes/custom-theme/package-lock.json
+
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.3"
+          coverage: none
+
+      - name: Install Composer dependencies (production only)
+        run: composer install --no-dev --prefer-dist --optimize-autoloader --no-progress
+
+      - name: Build theme assets
+        run: |
+          npm ci --prefix wp-content/themes/custom-theme
+          npm run build --prefix wp-content/themes/custom-theme
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+
+      - name: Sync files
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          rsync -az --delete \
+            --exclude-from=.deployignore \
+            -e "ssh -i $HOME/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            ./ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/"
+
+      - name: Flush object cache
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes \
+            "${SSH_USER}@${SSH_HOST}" "cd '${DEPLOY_PATH}' && wp cache flush"

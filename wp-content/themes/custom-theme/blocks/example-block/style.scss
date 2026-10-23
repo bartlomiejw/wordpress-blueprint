@@ -1,0 +1,29 @@
+// Example block styles — BEM naming, scoped to .example-block.
+// Compiled by @wordpress/scripts (loaded both in editor and on front end).
+
+@use "../../assets/css/abstracts/variables" as *;
+@use "../../assets/css/abstracts/mixins" as *;
+
+.example-block {
+	padding: $spacing-8 $spacing-6;
+
+	&__heading {
+		font-size: $font-size-2xl;
+		margin-bottom: $spacing-4;
+		color: $color-primary;
+	}
+
+	&__content {
+		font-size: $font-size-base;
+		line-height: $line-height-base;
+		color: $color-secondary;
+	}
+
+	@include respond-to("md") {
+		padding: $spacing-12 $spacing-8;
+
+		&__heading {
+			font-size: $font-size-3xl;
+		}
+	}
+}
